@@ -2,7 +2,7 @@
 
 A plain-text format for recording where a product's design and build stand.
 
-**Status:** version 0.1, a draft for review.
+**Version:** 0.1.1, a draft for review. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Why
 
