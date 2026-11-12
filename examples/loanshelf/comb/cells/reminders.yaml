@@ -1,0 +1,43 @@
+comb: "0.1"
+id: reminders
+name: Reminders
+parent: loanshelf
+stage: built
+
+core:
+  problem: Most late returns are forgotten, not kept on purpose.
+  for: A member whose tool is due back soon.
+  excludes:
+    - Chasing after the due date, which belongs to late fees
+
+faces:
+  function:
+    condition: unreachable
+    points_to:
+      - { path: docs/prd/reminders.md, at: 3f9c2ab, anchor: REM-01, kind: document }
+      - { path: src/jobs/send-reminders.ts, at: 8d41e07, kind: code }
+    reason: The job that sends reminders is written, but it is not listed in the scheduler, so it never runs.
+    evidence:
+      - { path: config/schedule.json, at: 8d41e07, kind: config }
+  design:
+    condition: unchecked
+    points_to:
+      - { path: src/messages/reminder.ts, at: 8d41e07, kind: design }
+  data:
+    condition: empty
+  testing:
+    condition: empty
+  non_functionals:
+    condition: empty
+
+questions: []
+
+borders:
+  - with: loan-period
+    condition: disputed
+    statements:
+      - says: The reminder goes out on day 6 and reads "due back tomorrow".
+        pointer: { path: src/messages/reminder.ts, at: 8d41e07, lines: 4-9, kind: design }
+      - says: The due date is set 14 days after collection.
+        pointer: { path: src/loans/due-date.ts, at: 8d41e07, lines: "12", kind: code }
+    note: Breaks rule R2. Whichever loan period is right, one of these is wrong.

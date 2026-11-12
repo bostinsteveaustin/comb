@@ -1,0 +1,13 @@
+comb: "0.1"
+id: loanshelf
+name: Loanshelf
+summary: >
+  An invented product: a neighbourhood tool library. Members reserve a tool,
+  collect it, and bring it back by the due date.
+rules:
+  - id: R1
+    text: A member is never charged without being told the amount first.
+    check: Could this change take money from someone who has not seen the figure?
+  - id: R2
+    text: There is one loan period, and every message and fee follows it.
+    check: Is a number of days written anywhere else?

@@ -1,0 +1,37 @@
+comb: "0.1"
+id: loan-period
+name: Loan period
+parent: loanshelf
+stage: built
+
+core:
+  problem: Without a known return date, tools drift and the shelf empties.
+  for: Every member with a tool out, and the next member waiting for it.
+  source: { path: docs/concepts/borrowing.md, at: 3f9c2ab, anchor: The loan period, kind: document }
+
+faces:
+  function:
+    condition: disputed
+    points_to:
+      - { path: docs/prd/borrowing.md, at: 3f9c2ab, anchor: BOR-04, kind: document }
+      - { path: src/loans/due-date.ts, at: 8d41e07, kind: code }
+    statements:
+      - says: A loan lasts 7 days.
+        pointer: { path: docs/prd/borrowing.md, at: 3f9c2ab, anchor: BOR-04, kind: document }
+      - says: The due date is set 14 days after collection.
+        pointer: { path: src/loans/due-date.ts, at: 8d41e07, lines: "12", kind: code }
+  design:
+    condition: unexamined
+  data:
+    condition: unexamined
+  testing:
+    condition: empty
+  non_functionals:
+    condition: empty
+
+questions:
+  - id: q1
+    text: Should larger tools have a longer loan than hand tools?
+    condition: parked
+    raised_by: Library volunteer
+    raised_on: 2026-09-18

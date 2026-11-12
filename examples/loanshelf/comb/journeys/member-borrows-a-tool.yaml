@@ -1,0 +1,23 @@
+comb: "0.1"
+id: member-borrows-a-tool
+name: A member borrows a tool and returns it late
+actor: Member
+steps:
+  - does: Joins the library.
+    cell: sign-up
+    reach: unknown
+  - does: Reserves a drill for the weekend.
+    cell: borrowing
+    reach: reached
+  - does: Collects it and is told the due date.
+    cell: loan-period
+    reach: reached
+  - does: Gets a reminder the day before it is due.
+    cell: reminders
+    reach: unreachable
+    reason: The reminder job is not scheduled, so no reminder is ever sent.
+  - does: Returns it two days late and is told the fee.
+    cell: late-fees
+    reach: unknown
+  - does: Gets a receipt for the fee.
+    reach: unknown

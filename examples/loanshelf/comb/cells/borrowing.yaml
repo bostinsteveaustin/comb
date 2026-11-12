@@ -1,0 +1,41 @@
+comb: "0.1"
+id: borrowing
+name: Borrowing
+parent: loanshelf
+stage: built
+
+core:
+  problem: People buy tools they use once a year. A shared shelf only works if a member can count on a tool being there.
+  for: Members who want a tool for a few days.
+  excludes:
+    - Buying or selling tools
+    - Lending between members without the library
+  source: { path: docs/concepts/borrowing.md, at: 3f9c2ab, kind: document }
+
+faces:
+  function:
+    condition: agrees
+    points_to:
+      - { path: docs/prd/borrowing.md, at: 3f9c2ab, anchor: BOR-01 to BOR-09, kind: document }
+      - { path: src/loans/reserve.ts, at: 8d41e07, kind: code }
+    evidence:
+      - { path: tests/loans/reserve.test.ts, at: 8d41e07, kind: test }
+  design:
+    condition: unchecked
+    points_to:
+      - { path: docs/design/reserve-and-collect.md, at: 3f9c2ab, kind: design }
+    note: The screens exist. Nobody has compared them with the requirements.
+  data:
+    condition: unchecked
+    points_to:
+      - { path: src/db/schema.ts, at: 8d41e07, anchor: loans, kind: schema }
+  testing:
+    condition: agrees
+    points_to:
+      - { path: docs/scenarios/borrowing.md, at: 3f9c2ab, kind: scenario }
+    evidence:
+      - { path: tests/loans/reserve.test.ts, at: 8d41e07, kind: test }
+  non_functionals:
+    condition: empty
+
+questions: []

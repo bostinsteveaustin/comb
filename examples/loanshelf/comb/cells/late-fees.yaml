@@ -1,0 +1,80 @@
+comb: "0.1"
+id: late-fees
+name: Late fees
+parent: loanshelf
+stage: specified
+
+core:
+  problem: A late tool costs the next member their weekend.
+  for: The library, which has to keep tools moving, and members who return on time.
+  excludes:
+    - Charging for wear and tear
+  source: { path: docs/concepts/late-fees.md, at: 5b7702c, kind: document }
+
+faces:
+  function:
+    condition: unchecked
+    points_to:
+      - { path: docs/prd/late-fees.md, at: 5b7702c, anchor: FEE-01 to FEE-06, kind: document }
+  design:
+    condition: unchecked
+    points_to:
+      - { path: docs/design/fee-messages.md, at: 5b7702c, kind: design }
+  data:
+    condition: empty
+  testing:
+    condition: unchecked
+    points_to:
+      - { path: docs/scenarios/late-fees.md, at: 5b7702c, kind: scenario }
+    note: Scenarios are written. No tests yet, which is expected before build.
+  non_functionals:
+    condition: open
+    question: q2
+
+seams:
+  - between: [function, design]
+    condition: disputed
+    statements:
+      - says: The fee is 50p a day and stops at £10.
+        pointer: { path: docs/prd/late-fees.md, at: 5b7702c, anchor: FEE-03, kind: document }
+      - says: The message to the member reads "50p a day until it is returned".
+        pointer: { path: docs/design/fee-messages.md, at: 5b7702c, anchor: Day 1 message, kind: design }
+    note: The message leaves out the cap, so a member is not told the most they could pay (rule R1).
+
+borders:
+  - with: loan-period
+    condition: settled
+    decision: d2
+
+questions:
+  - id: q1
+    text: Should late fees exist at all?
+    condition: settled
+    raised_by: Product owner
+    raised_on: 2026-09-02
+    decision: d1
+    watched_by:
+      measure: Share of loans returned late, by month
+      reopen_when: Above 20% for two months running
+  - id: q2
+    text: Do fees apply to members under 18?
+    condition: open
+    raised_by: Tester
+    raised_on: 2026-10-06
+
+decisions:
+  - id: d1
+    about: question:q1
+    decided: Keep fees for the pilot.
+    by: Product owner
+    date: 2026-09-10
+    reason: Two other tool libraries reported that returns slipped within a month of dropping fees.
+    reopens_if: Late returns go above 20% for two months running, which would mean fees are not working.
+  - id: d2
+    about: border:loan-period
+    decided: Fees start the day after the due date, whatever the loan period turns out to be.
+    by: Product owner
+    date: 2026-09-10
+    reason: Keeps late fees independent of the open dispute about 7 or 14 days.
+    proof:
+      - { path: docs/scenarios/late-fees.md, at: 5b7702c, anchor: FEE-S02, kind: scenario }

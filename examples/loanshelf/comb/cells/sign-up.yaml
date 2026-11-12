@@ -1,0 +1,18 @@
+comb: "0.1"
+id: sign-up
+name: Sign-up
+parent: loanshelf
+stage: built
+
+core:
+  problem: The library needs to know who has which tool.
+  for: A neighbour joining for the first time.
+
+faces:
+  function: { condition: unexamined }
+  design: { condition: unexamined }
+  data: { condition: unexamined }
+  testing: { condition: unexamined }
+  non_functionals: { condition: unexamined }
+
+questions: []
