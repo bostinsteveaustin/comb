@@ -35,6 +35,8 @@ questions: []
 borders:
   - with: loan-period
     condition: disputed
+    proposed_by: onboarding-agent
+    confirmed_by: Product owner
     statements:
       - says: The reminder goes out on day 6 and reads "due back tomorrow".
         pointer: { path: src/messages/reminder.ts, at: 8d41e07, lines: 4-9, kind: design }

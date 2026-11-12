@@ -27,7 +27,7 @@ pip install pyyaml jsonschema
 python3 tools/check.py examples/loanshelf/comb
 ```
 
-The example is Loanshelf, an invented tool-lending library with five cells and one journey. It passes with five warnings, and each warning is deliberate:
+The example is Loanshelf, an invented tool-lending library with five cells and one journey. It passes with five warnings, and each warning is deliberate. One mark is shown as proposed by a tool and not yet confirmed by a person. The warnings:
 
 - an open question that nothing is watching
 - a decision with no test holding it in place

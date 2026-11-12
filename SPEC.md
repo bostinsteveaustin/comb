@@ -125,6 +125,21 @@ statements:
     pointer: { path: src/loans/due-date.ts, at: 8d41e07, lines: "12", kind: code }
 ```
 
+### Proposed and confirmed
+
+Any mark can say who put it there and who has checked it.
+
+```yaml
+condition: disputed
+proposed_by: onboarding-agent
+confirmed_by: Product owner
+statements: [...]
+```
+
+A mark with `proposed_by` and no `confirmed_by` is a proposal. It is a claim for a person to look at, not yet a finding. A tool that fills in many cells at once should mark everything it writes this way.
+
+`settled` can never be a proposal, because only a person decides.
+
 ## 6. Seams and borders
 
 A **seam** is where two faces of the same cell meet. Use it when they disagree with each other.

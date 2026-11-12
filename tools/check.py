@@ -104,6 +104,8 @@ def check_mark(report, where, mark, cell, is_face=False):
             report.error(where, f"decision '{mark['decision']}' is not in this cell")
     if condition == "unreachable" and not mark.get("reason"):
         report.error(where, "'unreachable' needs a reason")
+    if condition == "settled" and mark.get("proposed_by") and not mark.get("confirmed_by"):
+        report.error(where, "'settled' cannot be a proposal: a person decides")
     if condition == "unchecked" and is_face and not mark.get("points_to"):
         report.warn(where, "'unchecked' but it points to nothing")
 
@@ -229,17 +231,21 @@ def main(folder):
             report.warn(where, "no journey passes through this cell")
 
     tally = Counter()
+    proposals = 0
     for cell, _ in cells.values():
-        for face in cell["faces"].values():
-            tally[face["condition"]] += 1
-        for mark in cell.get("seams", []) + cell.get("borders", []):
+        marks = list(cell["faces"].values()) + cell.get("seams", []) + cell.get("borders", [])
+        for mark in marks:
             tally[mark["condition"]] += 1
+            if mark.get("proposed_by") and not mark.get("confirmed_by"):
+                proposals += 1
 
     print(f"{project.get('name', root.name)}: {len(cells)} cells, {len(journeys)} journeys")
     if tally:
         print("Conditions on faces, seams and borders:")
         for condition, count in sorted(tally.items(), key=lambda item: (-item[1], item[0])):
             print(f"  {condition:<12}{count}")
+    if proposals:
+        print(f"Proposed and not yet confirmed by a person: {proposals}")
     if report.errors:
         print(f"\n{len(report.errors)} errors")
         for line in report.errors:
