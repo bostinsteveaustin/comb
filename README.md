@@ -47,4 +47,4 @@ This is an early draft and the questions at the end of [SPEC.md](SPEC.md) are re
 
 ## Licence
 
-To be chosen before publication.
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

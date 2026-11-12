@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/comb/0.1/comb.schema.json",
+  "$id": "https://raw.githubusercontent.com/bostinsteveaustin/comb/main/schema/comb.schema.json",
   "title": "Comb 0.1",
   "description": "Definitions for the three kinds of Comb file: project, cell and journey. The checker picks the definition by where the file sits.",
   "$defs": {
