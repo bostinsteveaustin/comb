@@ -12,6 +12,7 @@ core:
 faces:
   function:
     condition: disputed
+    proposed_by: onboarding-agent
     points_to:
       - { path: docs/prd/borrowing.md, at: 3f9c2ab, anchor: BOR-04, kind: document }
       - { path: src/loans/due-date.ts, at: 8d41e07, kind: code }
