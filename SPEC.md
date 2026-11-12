@@ -2,7 +2,9 @@
 
 A plain-text format for recording where a product's design and build stand.
 
-**Status:** draft for review. Expect it to change.
+**Version:** 0.1.1, 12 November 2026. A draft for review; expect it to change.
+
+Files declare `comb: "0.1"`. The third number marks additions that keep existing files valid. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1. What Comb is
 
