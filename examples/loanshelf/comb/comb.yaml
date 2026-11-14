@@ -1,9 +1,13 @@
-comb: "0.1"
+comb: "0.2"
 id: loanshelf
 name: Loanshelf
 summary: >
   An invented product: a neighbourhood tool library. Members reserve a tool,
   collect it, and bring it back by the due date.
+repositories:
+  - name: loanshelf/notices
+    url: https://example.org/loanshelf/notices
+    holds: The wording of every email and text the library sends.
 rules:
   - id: R1
     text: A member is never charged without being told the amount first.

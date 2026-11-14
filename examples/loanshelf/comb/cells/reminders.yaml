@@ -1,4 +1,4 @@
-comb: "0.1"
+comb: "0.2"
 id: reminders
 name: Reminders
 parent: loanshelf
@@ -23,8 +23,10 @@ faces:
     condition: unchecked
     points_to:
       - { path: src/messages/reminder.ts, at: 8d41e07, kind: design }
+      - { repo: loanshelf/notices, path: templates/reminder.txt, at: 61c0f2e, kind: design }
   data:
-    condition: empty
+    condition: not_applicable
+    reason: A reminder is worked out from the loan at the moment it is sent. Nothing about it is stored.
   testing:
     condition: empty
   non_functionals:

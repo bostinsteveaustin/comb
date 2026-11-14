@@ -1,10 +1,10 @@
-# Comb 0.1
+# Comb 0.2
 
 A plain-text format for recording where a product's design and build stand.
 
-**Version:** 0.1.1, 12 November 2026. A draft for review; expect it to change.
+**Version:** 0.2.0, 14 November 2026. A draft for review; expect it to change.
 
-Files declare `comb: "0.1"`. The third number marks additions that keep existing files valid. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Files declare `comb: "0.2"`. A 0.1 file is still valid and means what it meant; section 13 says what 0.2 added and how to move. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1. What Comb is
 
@@ -28,7 +28,7 @@ comb/
   journeys/<id>.yaml   one file per route a person takes
 ```
 
-Every file starts with `comb: "0.1"`. An `id` is lower-case words joined by hyphens, unique in the project, and matches the file name.
+Every file starts with `comb: "0.2"`, and every file in a comb declares the same version. An `id` is lower-case words joined by hyphens, unique in the project, and matches the file name.
 
 Avoid `on`, `off`, `yes` and `no` as field names or bare values. Many YAML readers turn them into true and false.
 
@@ -53,12 +53,27 @@ A pointer says where a real artefact lives.
 
 For something outside a repository, use `{ url: ..., seen: 2026-11-12 }`.
 
+### Other repositories
+
+A product often spans more than one repository. The comb lives in one of them, and a pointer without `repo` means that one. `comb.yaml` lists the others, so that a pointer's `repo` is a name the project has declared and not a string someone typed.
+
+```yaml
+repositories:
+  - name: loanshelf/notices
+    url: https://example.org/loanshelf/notices
+    holds: The wording of every email and text the library sends.
+```
+
+`name` is required and is the value a pointer's `repo` uses. `url` and `holds` are optional.
+
+Once `repositories` is present, a pointer that names a repository not in the list is an error. If it is absent and a pointer names another repository, the checker warns.
+
 ## 4. Cells
 
 A cell is one idea: a feature, a rule, a mechanism. It has a centre, a stage, five faces and a list of questions.
 
 ```yaml
-comb: "0.1"
+comb: "0.2"
 id: late-fees
 name: Late fees
 parent: loanshelf
@@ -107,7 +122,8 @@ Every face, seam and border has a condition. The list is fixed, and each conditi
 | Condition | Meaning | It must carry |
 |---|---|---|
 | `unexamined` | Nobody has looked | Nothing |
-| `empty` | Nothing exists here (faces only) | Nothing, and no `points_to` |
+| `empty` | Nothing exists here, and something could (faces only) | Nothing, and no `points_to` |
+| `not_applicable` | Nothing exists here, and nothing should (faces only) | `reason`, and no `points_to` |
 | `unchecked` | Something exists, and nobody has verified it | `points_to` |
 | `agrees` | The sources match, and a test shows it | `evidence`: at least one pointer of kind `test` |
 | `disputed` | Two sources say different things | `statements`: at least two, each with a pointer |
@@ -116,6 +132,27 @@ Every face, seam and border has a condition. The list is fixed, and each conditi
 | `unreachable` | It exists, and nothing can get to it | `reason` |
 
 `unexamined` and `agrees` are deliberately far apart. Silence is not agreement.
+
+`empty` and `not_applicable` are apart for the same reason. `empty` is a gap that may need filling, and on some faces it draws a warning. `not_applicable` is a judgement that the face has nothing to hold, such as the data face of an idea that stores nothing, and it must say why. It can be proposed by a tool and confirmed by a person like any other mark.
+
+### What `agrees` claims
+
+`agrees` is the strongest thing a mark can say, so it is worth being exact about what it says.
+
+- It is a claim about a moment. The `at` of each evidence pointer is the commit the test was seen to pass at. If the test or what it tests has changed since, the mark needs looking at again.
+- A test existing is not agreement. A face that points to tests nobody has run against its sources is `unchecked`.
+
+On each face:
+
+| Face | `agrees` means |
+|---|---|
+| `function` | The code does what the requirements say, and the evidence is a test of that behaviour |
+| `design` | What people see matches the design, and the evidence is a test that looks at it |
+| `data` | What is stored matches the schema and the rules about it, and the evidence is a test of that |
+| `testing` | Every scenario the face points to has a test, and those tests pass. The evidence is those tests, and `points_to` names the scenarios |
+| `non_functionals` | The limit is met, and the evidence is a test that measures it |
+
+The testing face is the one that is easy to get wrong, because its evidence and its subject are both tests. It does not mean "tests exist" or "the tests pass". It means the tests cover what the scenarios say should be tested. A testing face marked `agrees` that points to no scenarios draws a warning: there is nothing for the tests to agree with.
 
 A statement is one plain sentence and a pointer:
 
@@ -210,12 +247,34 @@ decisions:
 
 Decisions are added, not edited. To change your mind, add a new decision.
 
+### Decisions made before the comb
+
+Most products have decisions that were made long before anyone wrote a comb: in meeting minutes, decision records, or a paragraph of a requirements document. They belong in the comb, and a tool reading the repository can find them. A tool still cannot make a decision, so it records one it found as a proposal.
+
+```yaml
+decisions:
+  - id: d1
+    about: cell
+    decided: Members collect tools in person. The library does not deliver.
+    by: Library committee
+    date: 2026-06-03
+    reason: Volunteers cannot cover deliveries.
+    source: { path: docs/minutes/2026-06.md, at: 3f9c2ab, anchor: Item 4, kind: document }
+    proposed_by: onboarding-agent
+```
+
+`source` points to where the decision was first recorded. `by`, `date` and `reason` are taken from that record, not from the tool.
+
+`proposed_by` names whoever copied the decision in. A decision with `proposed_by` must have a `source`. Until a person adds `confirmed_by`, it is a claim that this decision was made and is recorded correctly, and nothing may rest on it: a mark or a question cannot be `settled` by an unconfirmed decision.
+
+A decision a person writes directly into the comb needs none of these three fields.
+
 ## 9. Journeys
 
 A journey is the route one kind of person takes, in order. Each step names the cell it passes through.
 
 ```yaml
-comb: "0.1"
+comb: "0.2"
 id: member-borrows-a-tool
 name: A member borrows a tool and returns it late
 actor: Member
@@ -240,7 +299,7 @@ A step with no `cell` is allowed. It means the journey needs something no cell h
 `comb.yaml` names the project and the rules that apply to every cell.
 
 ```yaml
-comb: "0.1"
+comb: "0.2"
 id: loanshelf
 name: Loanshelf
 rules:
@@ -272,7 +331,27 @@ It checks that files follow the format, that every reference lands, and that eac
 
 It does not open the artefacts that pointers name, check that a commit exists, or judge whether two statements really disagree.
 
-## 13. Questions for reviewers
+## 13. Moving from 0.1
+
+Change the first line of every file to `comb: "0.2"`. Nothing else is required: every valid 0.1 file is a valid 0.2 file with the same meaning.
+
+What 0.2 added, all of it optional:
+
+| Addition | Section |
+|---|---|
+| `repositories` in `comb.yaml` | 3 |
+| The condition `not_applicable` | 5 |
+| A stated meaning for `agrees` on each face | 5 |
+| `source`, `proposed_by` and `confirmed_by` on a decision | 8 |
+
+A file that declares `0.1` may not use the additions, and the files of one comb may not mix versions. A tool that reads only 0.1 should refuse a 0.2 file and say so; it should not guess.
+
+Worth a look when you move:
+
+- Any face marked `empty` that is really "nothing should be here". Change it to `not_applicable` with a reason, and the warning goes.
+- Any testing face marked `agrees`. Check it against section 5.
+
+## 14. Questions for reviewers
 
 1. Are these the right five faces, plus questions? What would you add or drop?
 2. Is `settled` enough for a known failure, or does that need a condition of its own?
@@ -280,3 +359,6 @@ It does not open the artefacts that pointers name, check that a commit exists, o
 4. Should decisions live in the cell, or in one log for the whole project?
 5. Could you write your own scenario area in this format without help? Where did it fight you?
 6. Is anything here that your existing files already say better?
+7. Is `not_applicable` worth a condition of its own, or would `empty` with a `reason` do?
+8. Should a decision copied in by a tool sit with the others, as here, or in a list of its own until a person confirms it?
+9. Does the meaning of `agrees` on the testing face match how you would use it?

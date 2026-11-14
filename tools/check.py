@@ -84,6 +84,13 @@ def check_mark(report, where, mark, cell, is_face=False):
 
     if condition == "empty" and not is_face:
         report.error(where, "only a face can be 'empty'")
+    if condition == "not_applicable":
+        if not is_face:
+            report.error(where, "only a face can be 'not_applicable'")
+        if not mark.get("reason"):
+            report.error(where, "'not_applicable' needs a reason")
+        if mark.get("points_to"):
+            report.error(where, "'not_applicable' but it points to something")
     if condition == "empty" and mark.get("points_to"):
         report.error(where, "'empty' but it points to something")
     if condition == "disputed" and len(statements) < 2:
@@ -108,9 +115,64 @@ def check_mark(report, where, mark, cell, is_face=False):
         report.error(where, "'settled' cannot be a proposal: a person decides")
     if condition == "unchecked" and is_face and not mark.get("points_to"):
         report.warn(where, "'unchecked' but it points to nothing")
+    if condition == "agrees" and where.endswith("face:testing") and not mark.get("points_to"):
+        report.warn(where, "'agrees' on the testing face, but it points to no scenarios for the tests to agree with")
+    if condition == "settled" and mark.get("decision") in cell.get("_unconfirmed_decisions", ()):
+        report.error(where, f"'settled' rests on decision '{mark['decision']}', which a person has not confirmed")
+
+
+def pointers_in(value):
+    """Every pointer anywhere inside a file."""
+    if isinstance(value, dict):
+        if "path" in value and "at" in value:
+            yield value
+        for item in value.values():
+            yield from pointers_in(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from pointers_in(item)
+
+
+# What 0.2 added. A file that declares 0.1 may use none of it.
+def uses_0_2(data):
+    found = []
+    if isinstance(data, dict):
+        if data.get("repositories"):
+            found.append("repositories")
+        for face in (data.get("faces") or {}).values():
+            if isinstance(face, dict) and face.get("condition") == "not_applicable":
+                found.append("not_applicable")
+        for decision in data.get("decisions") or []:
+            if isinstance(decision, dict):
+                found += [key for key in ("source", "proposed_by", "confirmed_by") if key in decision]
+    return sorted(set(found))
+
+
+def check_version(report, data, where, versions):
+    version = data.get("comb")
+    versions[version] = versions.get(version, 0) + 1
+    if version == "0.1":
+        for feature in uses_0_2(data):
+            report.error(where, f"'{feature}' was added in 0.2, and this file declares 0.1")
+
+
+def check_repos(report, data, where, declared):
+    """A pointer to another repository should name one the project declares."""
+    named = sorted({p["repo"] for p in pointers_in(data) if "repo" in p})
+    for repo in named:
+        if declared is None:
+            if data.get("comb") != "0.1":
+                report.warn(where, f"points into '{repo}', and comb.yaml declares no repositories")
+        elif repo not in declared:
+            report.error(where, f"points into '{repo}', which comb.yaml does not declare")
 
 
 def check_cell(report, cell, where, known_ids, project_id):
+    # A decision copied in by a tool is a proposal until a person confirms it.
+    cell["_unconfirmed_decisions"] = {
+        d["id"] for d in cell.get("decisions", []) if d.get("proposed_by") and not d.get("confirmed_by")
+    }
+
     if cell["parent"] not in known_ids and cell["parent"] != project_id:
         report.error(where, f"parent '{cell['parent']}' is not the project or a cell")
     if cell["parent"] == cell["id"]:
@@ -147,6 +209,8 @@ def check_cell(report, cell, where, known_ids, project_id):
                 report.error(label, "'settled' needs the id of a decision")
             elif question["decision"] not in decision_ids:
                 report.error(label, f"decision '{question['decision']}' is not in this cell")
+            elif question["decision"] in cell["_unconfirmed_decisions"]:
+                report.error(label, f"'settled' rests on decision '{question['decision']}', which a person has not confirmed")
         if question["condition"] in ("open", "reopened") and "watched_by" not in question:
             report.warn(label, "nothing is watching this question")
 
@@ -157,6 +221,8 @@ def check_cell(report, cell, where, known_ids, project_id):
             report.error(label, f"it is about '{about}', which is not in this cell")
         if about.startswith("border:") and about.split(":", 1)[1] not in known_ids:
             report.error(label, f"it is about '{about}', which is not a cell")
+        if decision.get("proposed_by") and not decision.get("source"):
+            report.error(label, "a decision copied in by a tool needs a source: where it was first recorded")
         if not decision.get("proof"):
             report.warn(label, "no proof yet: no test holds this decision in place")
 
@@ -175,6 +241,15 @@ def main(folder):
         project_id = None
     else:
         project_id = project["id"]
+    versions = {}
+    declared = None
+    if isinstance(project, dict):
+        check_version(report, project, "comb.yaml", versions)
+        if project_id and "repositories" in project:
+            declared = {r["name"] for r in project["repositories"]}
+            for repeated in [n for n, c in Counter(r["name"] for r in project["repositories"]).items() if c > 1]:
+                report.error("comb.yaml", f"repository '{repeated}' is declared twice")
+        check_repos(report, project, "comb.yaml", declared)
 
     cells = {}
     set_aside = set()  # ids of cell files that broke the format; kept so other files do not report them missing
@@ -186,6 +261,8 @@ def main(folder):
             report.error(where, "fix the lines above first; the other checks were skipped for this file")
             set_aside.add(cell.get("id") if isinstance(cell, dict) and isinstance(cell.get("id"), str) else path.stem)
             continue
+        check_version(report, cell, where, versions)
+        check_repos(report, cell, where, declared)
         if cell["id"] != path.stem:
             report.error(where, f"id '{cell['id']}' does not match the file name")
         if cell["id"] in cells:
@@ -213,6 +290,7 @@ def main(folder):
         journey = load(path)
         if not check_schema(report, journey_validator, journey, where):
             continue
+        check_version(report, journey, where, versions)
         if journey["id"] != path.stem:
             report.error(where, f"id '{journey['id']}' does not match the file name")
         journeys[journey["id"]] = journey
@@ -225,6 +303,10 @@ def main(folder):
             if step["reach"] == "unreachable" and not step.get("reason"):
                 report.error(label, "'unreachable' needs a reason")
 
+    if len(versions) > 1:
+        mix = ", ".join(f"{count} at {version}" for version, count in sorted(versions.items()))
+        report.error("comb.yaml", f"the files declare different versions ({mix}); a comb is written to one")
+
     on_a_journey = {s.get("cell") for j in journeys.values() for s in j["steps"]}
     for cell_id, (cell, where) in cells.items():
         if journeys and cell_id not in on_a_journey and cell["stage"] != "retired":
@@ -232,7 +314,9 @@ def main(folder):
 
     tally = Counter()
     proposals = 0
+    proposed_decisions = 0
     for cell, _ in cells.values():
+        proposed_decisions += len(cell.get("_unconfirmed_decisions", ()))
         marks = list(cell["faces"].values()) + cell.get("seams", []) + cell.get("borders", [])
         for mark in marks:
             tally[mark["condition"]] += 1
@@ -243,9 +327,11 @@ def main(folder):
     if tally:
         print("Conditions on faces, seams and borders:")
         for condition, count in sorted(tally.items(), key=lambda item: (-item[1], item[0])):
-            print(f"  {condition:<12}{count}")
+            print(f"  {condition:<16}{count}")
     if proposals:
         print(f"Proposed and not yet confirmed by a person: {proposals}")
+    if proposed_decisions:
+        print(f"Earlier decisions copied in and not yet confirmed by a person: {proposed_decisions}")
     if report.errors:
         print(f"\n{len(report.errors)} errors")
         for line in report.errors:

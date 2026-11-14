@@ -1,4 +1,4 @@
-comb: "0.1"
+comb: "0.2"
 id: borrowing
 name: Borrowing
 parent: loanshelf
@@ -39,3 +39,13 @@ faces:
     condition: empty
 
 questions: []
+
+decisions:
+  - id: d1
+    about: cell
+    decided: Members collect tools in person. The library does not deliver.
+    by: Library committee
+    date: 2026-06-03
+    reason: Volunteers cannot cover deliveries, and handing a tool over is when its condition gets checked.
+    source: { path: docs/minutes/2026-06.md, at: 3f9c2ab, anchor: Item 4, kind: document }
+    proposed_by: onboarding-agent
