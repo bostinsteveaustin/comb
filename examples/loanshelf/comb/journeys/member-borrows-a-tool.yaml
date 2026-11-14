@@ -1,4 +1,4 @@
-comb: "0.1"
+comb: "0.2"
 id: member-borrows-a-tool
 name: A member borrows a tool and returns it late
 actor: Member
